@@ -1,120 +1,98 @@
-		/**
-	 * Only letters or only numbers
-	 */
-$('#id-letters').keyup(function () { 
-    this.value = this.value.replace(/[^a-zA-Z.^ .*\.]/g,'');
+
+function applyMask(input, mask) {
+    let value = input.replace(/[^\d]/g, '');
+    let masked = '';
+    let maskIndex = 0;
+
+    for (let i = 0; i < value.length && maskIndex < mask.length; i++) {
+        if (mask[maskIndex] !== '#') {
+            masked += mask[maskIndex++];
+        }
+        masked += value[i];
+        maskIndex++;
+    }
+
+    return masked;
+}
+
+function isValidCPF(cpf) {
+    cpf = cpf.replace(/[^\d]/g, '');
+    if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
+
+    let soma = 0, resto;
+    for (let i = 1; i <= 9; i++) soma += parseInt(cpf[i - 1]) * (11 - i);
+    resto = (soma * 10) % 11;
+    if (resto === 10 || resto === 11) resto = 0;
+    if (resto !== parseInt(cpf[9])) return false;
+
+    soma = 0;
+    for (let i = 1; i <= 10; i++) soma += parseInt(cpf[i - 1]) * (12 - i);
+    resto = (soma * 10) % 11;
+    if (resto === 10 || resto === 11) resto = 0;
+    return resto === parseInt(cpf[10]);
+}
+
+
+function isValidCNPJ(cnpj) {
+    cnpj = cnpj.replace(/[^\d]/g, '');
+    if (cnpj.length !== 14 || /^(\d)\1+$/.test(cnpj)) return false;
+
+    let tamanho = cnpj.length - 2;
+    let numeros = cnpj.substring(0, tamanho);
+    let digitos = cnpj.substring(tamanho);
+    let soma = 0;
+    let pos = tamanho - 7;
+
+    for (let i = tamanho; i >= 1; i--) {
+        soma += numeros.charAt(tamanho - i) * pos--;
+        if (pos < 2) pos = 9;
+    }
+    let resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
+    if (resultado !== parseInt(digitos.charAt(0))) return false;
+
+    tamanho += 1;
+    numeros = cnpj.substring(0, tamanho);
+    soma = 0;
+    pos = tamanho - 7;
+    for (let i = tamanho; i >= 1; i--) {
+        soma += numeros.charAt(tamanho - i) * pos--;
+        if (pos < 2) pos = 9;
+    }
+    resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
+    return resultado === parseInt(digitos.charAt(1));
+}
+
+// cpf mask
+$('#cpf').on('input', function () {
+    const masked = applyMask($(this).val(), '###.###.###-##');
+    $(this).val(masked);
+
+    if (masked.length === 14 && !isValidCPF(masked)) {
+        alert('CPF inválido!');
+    }
 });
-$('#id-numbers').keyup(function () { 
-    this.value = this.value.replace(/[^0-9.]/g,'');
+//cnpj mask
+$('#cnpj').on('input', function () {
+    const masked = applyMask($(this).val(), '##.###.###/####-##');
+    $(this).val(masked);
+
+    if (masked.length === 18 && !isValidCNPJ(masked)) {
+        alert('CNPJ inválido!');
+    }
 });
 
-	/**
-	 *  END
-	 */
+// phone mask
+$('#tel').on('input', function () {
+    const masked = applyMask($(this).val(), '(##) #####-####');
+    $(this).val(masked);
+});
 
-/* Máscaras telefone */
+// only letters
+$('#id-letters').on('input', function () {
+    this.value = this.value.replace(/[^a-zA-Z\s]/g, '');
+});
 
-
-$("#tel").bind('input propertychange',function(){
-    // pego o valor do telefone
-    var texto = $(this).val();
-    // Tiro tudo que não é numero
-    texto = texto.replace(/[^\d]/g, '');
-    // Se tiver alguma coisa
-    if (texto.length > 0)
-    {
-    // Ponho o primeiro parenteses do DDD    
-    texto = "(" + texto;
-
-        if (texto.length > 3)
-        {
-            // Fecha o parenteses do DDD
-            texto = [texto.slice(0, 3), ") ", texto.slice(3)].join('');  
-        }
-        if (texto.length > 12)
-        {      
-            // Se for 13 digitos ( DDD + 9 digitos) ponhe o traço no quinto digito            
-            if (texto.length > 13) 
-                texto = [texto.slice(0, 10), "-", texto.slice(10)].join('');
-            else
-             // Se for 12 digitos ( DDD + 8 digitos) ponhe o traço no quarto digito
-                texto = [texto.slice(0, 9), "-", texto.slice(9)].join('');
-        }   
-            // Não adianta digitar mais digitos!
-            if (texto.length > 15)                
-               texto = texto.substr(0,15);
-    }
-    // Retorna o texto
-   $(this).val(texto);     
-})
-
-/*  F I M Máscaras telefone */
-
-
-/* Máscaras CPF */
-
-
-$("#cpf").bind('input propertychange',function(){
-    // pego o valor do telefone
-    var texto = $(this).val();
-    // Tiro tudo que não é numero
-    texto = texto.replace(/[^\d]/g, '');
-    // Se tiver alguma coisa
-    if (texto.length > 0)
-    {
-    // Ponho o primeiro parenteses do DDD    
-
-        if (texto.length > 3)
-        {
-            // Fecha o parenteses do DDD
-            texto = [texto.slice(0, 3), ".", texto.slice(3)].join('');  
-        }
-        if ((texto.length > 6) && (texto.length > 3)){
-        	 texto = [texto.slice(0, 7), ".", texto.slice(7)].join(''); 
-        }
-        if ((texto.length > 9) && (texto.length > 6)){
-        	 texto = [texto.slice(0, 11), "-", texto.slice(11)].join(''); 
-        }
-
-            // Não adianta digitar mais digitos!
-            if (texto.length > 14)                
-               texto = texto.substr(0,14);
-    }
-    // Retorna o texto
-   $(this).val(texto);     
-})
-
-/*  F I M Máscaras CPF */
-
-$("#cnpj").bind('input propertychange',function(){
-    // pego o valor do telefone
-    var texto = $(this).val();
-    // Tiro tudo que não é numero
-    texto = texto.replace(/[^\d]/g, '');
-    // Se tiver alguma coisa
-    if (texto.length > 0)
-    {
-    // Ponho o primeiro parenteses do DDD    
-
-        if (texto.length > 2)
-        {
-            // Fecha o parenteses do DDD
-            texto = [texto.slice(0, 2), ".", texto.slice(2)].join('');  
-        }
-        if ((texto.length > 6) && (texto.length > 2)){
-        	 texto = [texto.slice(0, 6), ".", texto.slice(6)].join(''); 
-        }
-        if ((texto.length > 10) && (texto.length > 6)){
-        	 texto = [texto.slice(0, 10), "/", texto.slice(10)].join(''); 
-        }
-        if ((texto.length > 15) && (texto.length > 9)){
-        	 texto = [texto.slice(0, 15), "-", texto.slice(15)].join(''); 
-        }
-
-            // Não adianta digitar mais digitos!
-            if (texto.length > 18)                
-               texto = texto.substr(0,18);
-    }
-    // Retorna o texto
-   $(this).val(texto);     
-})
+// only numbers
+$('#id-numbers').on('input', function () {
+    this.value = this.value.replace(/[^0-9]/g, '');
+});
